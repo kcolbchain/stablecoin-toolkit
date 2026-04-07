@@ -4,15 +4,25 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   console.log("Deploying with:", deployer.address);
 
+  // Deploy MockAggregatorV3 for Chainlink Proof of Reserves
+  // We'll set an initial mock reserve of 1,000,000 units, assuming 18 decimals
+  // to align with typical ERC-20 token standards, making it compatible with `reserveAmount`
+  const initialMockReserveValue = ethers.parseUnits("1000000", 18); // 1,000,000 with 18 decimals
+  const mockAggregatorDecimals = 18;
+  const MockAggregatorV3 = await ethers.getContractFactory("MockAggregatorV3");
+  const mockAggregator = await MockAggregatorV3.deploy(initialMockReserveValue, mockAggregatorDecimals);
+  await mockAggregator.waitForDeployment();
+  console.log("MockAggregatorV3:", await mockAggregator.getAddress());
+
   // 1. Deploy Stablecoin
   const Stablecoin = await ethers.getContractFactory("Stablecoin");
   const stablecoin = await Stablecoin.deploy("INDR Stablecoin", "INDR", deployer.address);
   await stablecoin.waitForDeployment();
   console.log("Stablecoin:", await stablecoin.getAddress());
 
-  // 2. Deploy ReserveManager (105% minimum ratio)
+  // 2. Deploy ReserveManager (105% minimum ratio, with Chainlink PoR integration)
   const ReserveManager = await ethers.getContractFactory("ReserveManager");
-  const reserveManager = await ReserveManager.deploy(10500);
+  const reserveManager = await ReserveManager.deploy(10500, await mockAggregator.getAddress()); // Pass mock aggregator address
   await reserveManager.waitForDeployment();
   console.log("ReserveManager:", await reserveManager.getAddress());
 
