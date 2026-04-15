@@ -1,0 +1,39 @@
+{
+  "geography": "US",
+  "name": "United States",
+  "stablecoin": {
+    "name": "USD Stablecoin",
+    "symbol": "USDC-like",
+    "decimals": 6
+  },
+  "compliance": {
+    "kyc_required": true,
+    "max_transaction_amount": 100000000000,
+    "daily_limit": 1000000000000,
+    "notes": "US compliance: FinCEN MSB, state money transmitter licenses. Amounts in 6-decimal units.",
+    "regulatory": {
+      "finCEN_msb": true,
+      "state_licenses": ["NY-BitLicense", "TX-MTD", "CA-MTD"],
+      "sec_classification": "payment stablecoin"
+    }
+  },
+  "reserves": {
+    "minimum_ratio_bps": 10000,
+    "accepted_assets": [
+      "USD bank deposits",
+      "US Treasury bills (90-day)",
+      "Federal Reserve overnight repo"
+    ],
+    "reserve_auditor": "Third-party CPA firm",
+    "reporting_frequency": "monthly"
+  },
+  "fees": {
+    "mint_bps": 0,
+    "redeem_bps": 0,
+    "notes": "No mint/redeem fees for US market"
+  },
+  "contacts": {
+    "legal": "us-legal@company.com",
+    "compliance": "us-compliance@company.com"
+  }
+}

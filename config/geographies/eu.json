@@ -1,0 +1,39 @@
+{
+  "geography": "EU",
+  "name": "European Union",
+  "stablecoin": {
+    "name": "Euro Stablecoin",
+    "symbol": "EURD",
+    "decimals": 6
+  },
+  "compliance": {
+    "kyc_required": true,
+    "max_transaction_amount": 50000000000,
+    "daily_limit": 200000000000,
+    "notes": "EU MiCA regulation. Amounts in 6-decimal units.",
+    "regulatory": {
+      "mica_license": true,
+      "emi_license": false,
+      "e Money Directive": true
+    }
+  },
+  "reserves": {
+    "minimum_ratio_bps": 10000,
+    "accepted_assets": [
+      "EUR bank deposits",
+      "EU sovereign bonds",
+      "ECB reserve deposits"
+    ],
+    "reserve_auditor": "EU-authorized auditor",
+    "reporting_frequency": "quarterly"
+  },
+  "fees": {
+    "mint_bps": 15,
+    "redeem_bps": 15,
+    "notes": "EUR stablecoin with standard mint/redeem spread"
+  },
+  "contacts": {
+    "legal": "eu-legal@company.com",
+    "compliance": "eu-compliance@company.com"
+  }
+}

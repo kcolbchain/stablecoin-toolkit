@@ -1,0 +1,39 @@
+{
+  "geography": "LATAM",
+  "name": "Latin America",
+  "stablecoin": {
+    "name": "Latin America USD Stablecoin",
+    "symbol": "LATUSD",
+    "decimals": 6
+  },
+  "compliance": {
+    "kyc_required": false,
+    "max_transaction_amount": 10000000000,
+    "daily_limit": 50000000000,
+    "notes": "LATAM-friendly: lower KYC barriers for unbanked access. Amounts in 6-decimal units.",
+    "regulatory": {
+      "panama_license": false,
+      "el_salvador_btc_law": true,
+      "brazil_regulated": false
+    }
+  },
+  "reserves": {
+    "minimum_ratio_bps": 10200,
+    "accepted_assets": [
+      "USD bank deposits",
+      "US Treasury bills",
+      "Latin America bank deposits (Tier-1)"
+    ],
+    "reserve_auditor": "Independent auditor",
+    "reporting_frequency": "monthly"
+  },
+  "fees": {
+    "mint_bps": 25,
+    "redeem_bps": 25,
+    "notes": "Higher fees to cover LATAM operational costs"
+  },
+  "contacts": {
+    "legal": "latam-legal@company.com",
+    "compliance": "latam-compliance@company.com"
+  }
+}
