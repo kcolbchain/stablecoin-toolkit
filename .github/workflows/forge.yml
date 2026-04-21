@@ -32,7 +32,7 @@ jobs:
         run: npm install
 
       - name: Install forge-std
-        run: forge install foundry-rs/forge-std --no-commit
+        run: forge install foundry-rs/forge-std
 
       - name: Forge test
         run: forge test -vvv
