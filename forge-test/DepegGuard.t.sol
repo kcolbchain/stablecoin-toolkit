@@ -163,8 +163,11 @@ contract DepegGuardTest is Test {
         assertEq(uint256(guard.currentState()), uint256(DepegGuard.State.Hard));
         assertFalse(guard.redeemAllowed());
 
-        // Fast-forward past the hard-halt timer.
+        // Fast-forward past the hard-halt timer. Re-publish the feed
+        // timestamp so it's not stale after the warp (mirrors the hardhat
+        // suite's equivalent step).
         vm.warp(enteredAt + guard.hardRedeemHaltSeconds() + 1);
+        _setPrice(int256(PEG));
         guard.poke();
         assertEq(uint256(guard.currentState()), uint256(DepegGuard.State.Normal));
         assertTrue(guard.redeemAllowed());
