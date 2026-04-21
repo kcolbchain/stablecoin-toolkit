@@ -1,0 +1,38 @@
+name: forge
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: forge test
+    runs-on: ubuntu-latest
+    env:
+      # foundry.toml pins libs=["node_modules"] (for @openzeppelin).
+      # Forge-std installs to lib/ by default; extend FOUNDRY_LIBS so
+      # both resolve without modifying foundry.toml.
+      FOUNDRY_LIBS: '["node_modules", "lib"]'
+      FOUNDRY_TEST: forge-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install npm deps (@openzeppelin/contracts)
+        run: npm install
+
+      - name: Install forge-std
+        run: forge install foundry-rs/forge-std --no-commit
+
+      - name: Forge test
+        run: forge test -vvv
