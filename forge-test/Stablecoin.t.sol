@@ -196,4 +196,112 @@ contract StablecoinTest is Test {
         assertEq(coin.totalSupply(), supplyBefore);
         assertEq(coin.balanceOf(user1) + coin.balanceOf(user2), amount);
     }
+
+        // ==================== EIP-2612 Permit Tests ====================
+
+    function _deployCoinWithOwner() internal returns (Stablecoin c, address owner_, uint256 ownerKey_) {
+        ownerKey_ = 0x1234567890123456789012345678901234567890123456789012345678901234;
+        owner_ = vm.addr(ownerKey_);
+        vm.prank(owner_);
+        c = new Stablecoin("Test Stablecoin", "TSTBL", owner_);
+        vm.prank(owner_);
+        c.mint(owner_, 1_000_000 ether);
+    }
+
+    function testFuzz_permitValid(uint256 value, uint256 deadline) public {
+        (Stablecoin c, address owner_, uint256 ownerKey_) = _deployCoinWithOwner();
+        address spender_ = address(0x5678);
+        vm.assume(value > 0 && value <= 1_000_000 ether);
+        vm.assume(deadline > block.timestamp);
+
+        uint256 nonce = c.nonces(owner_);
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                c.DOMAIN_SEPARATOR(),
+                keccak256(
+                    abi.encode(
+                        keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"),
+                        owner_,
+                        spender_,
+                        value,
+                        nonce,
+                        deadline
+                    )
+                )
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerKey_, digest);
+
+        vm.prank(spender_);
+        c.permit(owner_, spender_, value, deadline, v, r, s);
+
+        assertEq(c.allowance(owner_, spender_), value);
+        assertEq(c.nonces(owner_), nonce + 1);
+    }
+
+    function testFuzz_permitExpiredDeadlineReverts(uint256 value) public {
+        (Stablecoin c, address owner_, uint256 ownerKey_) = _deployCoinWithOwner();
+        address spender_ = address(0x5678);
+        vm.assume(value > 0 && value <= 1_000_000 ether);
+        uint256 deadline = block.timestamp - 1;
+
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                c.DOMAIN_SEPARATOR(),
+                keccak256(
+                    abi.encode(
+                        keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"),
+                        owner_,
+                        spender_,
+                        value,
+                        c.nonces(owner_),
+                        deadline
+                    )
+                )
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerKey_, digest);
+
+        vm.prank(spender_);
+        vm.expectRevert();
+        c.permit(owner_, spender_, value, deadline, v, r, s);
+    }
+
+
+    function testFuzz_permitReplayReverts(uint256 value, uint256 deadline) public {
+        (Stablecoin c, address owner_, uint256 ownerKey_) = _deployCoinWithOwner();
+        address spender_ = address(0x5678);
+        vm.assume(value > 0 && value <= 1_000_000 ether);
+        vm.assume(deadline > block.timestamp);
+
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                c.DOMAIN_SEPARATOR(),
+                keccak256(
+                    abi.encode(
+                        keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"),
+                        owner_,
+                        spender_,
+                        value,
+                        c.nonces(owner_),
+                        deadline
+                    )
+                )
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerKey_, digest);
+
+        vm.prank(spender_);
+        c.permit(owner_, spender_, value, deadline, v, r, s);
+
+        vm.prank(spender_);
+        vm.expectRevert();
+        c.permit(owner_, spender_, value, deadline, v, r, s);
+    }
 }
