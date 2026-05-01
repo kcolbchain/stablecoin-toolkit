@@ -65,6 +65,8 @@
   .tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 4px; font-family: var(--mono); }
   .tag.on { background: rgba(52,211,153,0.15); color: var(--accent); }
   .tag.off { background: rgba(138,147,163,0.12); color: var(--muted); }
+  .tag.warn { background: rgba(251,191,36,0.15); color: var(--warn); }
+  .tag.hot { background: rgba(248,113,113,0.15); color: var(--hot); }
   .geo-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
   .geo-card h4 { margin: 0 0 4px 0; font-size: 14px; }
   .geo-card .sub { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
@@ -156,6 +158,28 @@
       <div class="donut-container" style="margin-top:16px">
         <svg id="donut" width="160" height="160" viewBox="0 0 160 160"></svg>
         <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== RESERVE PROOF ===== -->
+  <div class="card" style="margin-bottom:16px">
+    <h2>Reserve Proof</h2>
+    <div class="grid-2" style="margin-bottom:10px">
+      <div>
+        <div class="field">
+          <label>Stablecoin totalSupply()</label>
+          <input type="number" id="proofSupply" value="5000000" min="0" step="100000" oninput="drawReserveProof()" />
+        </div>
+        <div class="field">
+          <label>Chainlink PoR reserves</label>
+          <input type="number" id="proofReserves" value="5250000" min="0" step="100000" oninput="drawReserveProof()" />
+        </div>
+      </div>
+      <div>
+        <div class="result-row"><span class="rl">On-chain status</span><span class="rv"><span class="tag on" id="proofStatus">--</span></span></div>
+        <div class="result-row"><span class="rl">Reserve coverage</span><span class="rv" id="proofCoverage">--</span></div>
+        <div class="result-row"><span class="rl">ReserveCheckPerformed</span><span class="rv" id="proofEvent">--</span></div>
       </div>
     </div>
   </div>
@@ -281,6 +305,27 @@ function drawReserve() {
   leg.innerHTML = slices.map(s =>
     `<div><span class="swatch" style="background:${s.color}"></span>${s.label}: <span style="font-family:var(--mono);color:var(--fg)">${fmtUsd(s.value)}</span></div>`
   ).join('');
+}
+
+/* ====== Reserve Proof ====== */
+function drawReserveProof() {
+  const supply = parseFloat(document.getElementById('proofSupply').value) || 0;
+  const reserves = parseFloat(document.getElementById('proofReserves').value) || 0;
+  const statusEl = document.getElementById('proofStatus');
+  const coverageEl = document.getElementById('proofCoverage');
+  const eventEl = document.getElementById('proofEvent');
+
+  let status = 'Backed';
+  let tag = 'on';
+  if (reserves < supply) { status = 'Underbacked'; tag = 'hot'; }
+  else if (reserves > supply) { status = 'Overshoot'; tag = 'warn'; }
+
+  const coverage = supply === 0 ? Infinity : (reserves / supply) * 100;
+  statusEl.textContent = status;
+  statusEl.className = 'tag ' + tag;
+  coverageEl.textContent = supply === 0 ? 'unbounded' : coverage.toFixed(2) + '%';
+  coverageEl.className = 'rv ' + (reserves < supply ? 'hot' : '');
+  eventEl.textContent = `${fmtUsd(supply)} / ${fmtUsd(reserves)} / ${reserves >= supply}`;
 }
 
 /* ====== Burn Toll Impact Chart ====== */
@@ -410,6 +455,7 @@ function renderGeo() {
 /* ====== Init ====== */
 calc();
 drawReserve();
+drawReserveProof();
 drawBurnChart();
 renderCompliance();
 renderGeo();
