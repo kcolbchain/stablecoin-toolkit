@@ -30,6 +30,7 @@ Built on learnings from real stablecoin deployments. Production-grade Solidity c
 
 - **ERC-20 stablecoin** with mint/burn, pausable, blacklistable, EIP-2612 permit
 - **Reserve manager** — multi-asset reserve tracking, on-chain proof of reserves, ratio enforcement
+- **Chainlink reserve proof** — compares stablecoin supply against a Proof of Reserves feed with backed / underbacked / overshoot status
 - **Compliance module** — KYC status per address, geography-based transfer restrictions, transaction limits
 - **Minting gateway** — compliance-checked minting, redemption queue, fee management
 - **Depeg defence** — `DepegGuard` state machine monitors the collateral price feed and pauses mints / stablecoin on threshold breaches; see [`docs/depeg-guard.md`](docs/depeg-guard.md)
@@ -70,10 +71,23 @@ config/geographies/
 |----------|-------------|
 | `Stablecoin.sol` | Core ERC-20 with mint/burn, pause, blacklist, permit |
 | `ReserveManager.sol` | Multi-asset reserve tracking and proof of reserves |
+| `ChainlinkReserveProof.sol` | Read-only reserve proof comparing `totalSupply()` with a Chainlink PoR feed |
 | `ComplianceModule.sol` | KYC, geography restrictions, transaction limits |
 | `Minter.sol` | Gateway — compliance + reserve checks before mint/redeem |
 | `DepegGuard.sol` | Depeg-defence watchdog — Normal/Caution/Hard state machine, pauses mints + stablecoin on threshold breaches. Spec: [`docs/depeg-guard.md`](docs/depeg-guard.md) |
 | `ChainlinkPoRAdapter.sol` | Adapter for Chainlink Proof of Reserves feeds |
+
+## Reserve Proof
+
+`ChainlinkReserveProof` verifies whether the minted supply is fully backed by a
+Chainlink Proof of Reserves feed. It exposes:
+
+- `isFullyBacked()` for simple status checks.
+- `reserveStatus()` for `Underbacked`, `Backed`, or `Overshoot`.
+- `checkReserves()` to emit `ReserveCheckPerformed(supply, reserves, backed)`.
+
+See [`docs/reserve-proof.md`](docs/reserve-proof.md) for deployment inputs,
+staleness checks, and operational guidance.
 
 ## Contributing
 

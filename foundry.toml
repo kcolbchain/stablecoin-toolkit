@@ -1,7 +1,8 @@
 [profile.default]
 src = "contracts"
+test = "forge-test"
 out = "forge-out"
-libs = ["node_modules"]
+libs = ["node_modules", "lib"]
 solc = "0.8.24"
 optimizer = true
 optimizer-runs = 200
