@@ -71,9 +71,21 @@ config/geographies/
 | `Stablecoin.sol` | Core ERC-20 with mint/burn, pause, blacklist, permit |
 | `ReserveManager.sol` | Multi-asset reserve tracking and proof of reserves |
 | `ComplianceModule.sol` | KYC, geography restrictions, transaction limits |
+| `compliance/BrazilCompliance.sol` | Brazil extension with hashed CPF validation and PIX settlement hooks |
 | `Minter.sol` | Gateway — compliance + reserve checks before mint/redeem |
 | `DepegGuard.sol` | Depeg-defence watchdog — Normal/Caution/Hard state machine, pauses mints + stablecoin on threshold breaches. Spec: [`docs/depeg-guard.md`](docs/depeg-guard.md) |
 | `ChainlinkPoRAdapter.sol` | Adapter for Chainlink Proof of Reserves feeds |
+
+### Brazil Compliance
+
+`BrazilCompliance` extends the base compliance module for BR issuers:
+
+- stores only off-chain hashed CPF values (`bytes32`), never plaintext tax IDs
+- enforces approved CPF status for accounts in the `BR` geography
+- preserves sanctions, geography allow/deny, max transaction, and daily limit checks
+- emits `PIXSettled(address indexed account, bytes32 indexed pixKey, uint256 amount)` for PIX settlement hooks
+
+Use `setBrazilKYC(account, cpfHash, kycStatus, cpfStatus)` to bind a normalized off-chain CPF hash to an account and `configureBrazil(...)` to tune the BR geography gate.
 
 ## Contributing
 

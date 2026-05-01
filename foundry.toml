@@ -1,5 +1,6 @@
 [profile.default]
 src = "contracts"
+test = "forge-test"
 out = "forge-out"
 libs = ["node_modules"]
 solc = "0.8.24"

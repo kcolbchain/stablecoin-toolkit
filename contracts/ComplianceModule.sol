@@ -9,18 +9,23 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev Part of kcolbchain/stablecoin-toolkit
  */
 contract ComplianceModule is Ownable {
-    enum KYCStatus { None, Pending, Approved, Rejected }
+    enum KYCStatus {
+        None,
+        Pending,
+        Approved,
+        Rejected
+    }
 
     struct AddressInfo {
         KYCStatus kycStatus;
-        bytes2 geography;        // ISO 3166-1 alpha-2 (e.g. "IN", "US")
+        bytes2 geography; // ISO 3166-1 alpha-2 (e.g. "IN", "US")
         bool sanctioned;
     }
 
     struct GeoConfig {
         bool allowed;
-        uint256 maxTxAmount;     // max per transaction (6 decimals)
-        uint256 dailyLimit;      // max per day (6 decimals)
+        uint256 maxTxAmount; // max per transaction (6 decimals)
+        uint256 dailyLimit; // max per day (6 decimals)
     }
 
     mapping(address => AddressInfo) public addressInfo;
@@ -51,7 +56,10 @@ contract ComplianceModule is Ownable {
         emit GeographySet(account, geo);
     }
 
-    function configureGeography(bytes2 geo, bool allowed, uint256 maxTx, uint256 dailyLimit) external onlyOwner {
+    function configureGeography(bytes2 geo, bool allowed, uint256 maxTx, uint256 dailyLimit)
+        external
+        onlyOwner
+    {
         geoConfigs[geo] = GeoConfig(allowed, maxTx, dailyLimit);
         emit GeoConfigUpdated(geo, allowed, maxTx, dailyLimit);
     }
@@ -66,7 +74,7 @@ contract ComplianceModule is Ownable {
         emit Unsanctioned(account);
     }
 
-    function checkCompliance(address account, uint256 amount) external view {
+    function checkCompliance(address account, uint256 amount) public view virtual {
         AddressInfo storage info = addressInfo[account];
 
         if (info.sanctioned) revert AddressSanctioned(account);
