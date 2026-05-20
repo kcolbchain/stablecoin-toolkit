@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Stablecoin.sol";
 import "./ReserveManager.sol";
 import "./ComplianceModule.sol";
+import "./extensions/BurnToll.sol";
 
 /**
  * @title Minter
@@ -19,6 +20,7 @@ contract Minter is Ownable {
     uint256 public mintFeeBps;    // e.g. 10 = 0.1%
     uint256 public redeemFeeBps;
     address public feeCollector;
+    BurnToll public burnToll;
 
     mapping(address => bool) public authorizedMinters;
 
@@ -37,10 +39,12 @@ contract Minter is Ownable {
     event RedemptionSettled(uint256 indexed id);
     event MinterAuthorized(address indexed minter);
     event MinterRevoked(address indexed minter);
+    event BurnTollSet(address indexed burnToll);
 
     error NotAuthorizedMinter();
     error ReserveCheckFailed();
     error AlreadySettled();
+    error AmountTooSmallForFeesAndToll();
 
     modifier onlyAuthorizedMinter() {
         if (!authorizedMinters[msg.sender] && msg.sender != owner()) {
@@ -86,12 +90,18 @@ contract Minter is Ownable {
 
         // Calculate fee
         uint256 fee = (amount * mintFeeBps) / 10000;
-        uint256 netAmount = amount - fee;
+        uint256 toll = _previewMintToll(amount);
+        if (fee + toll > amount) revert AmountTooSmallForFeesAndToll();
+        uint256 netAmount = amount - fee - toll;
 
         // Mint
         stablecoin.mint(to, netAmount);
         if (fee > 0) {
             stablecoin.mint(feeCollector, fee);
+        }
+        if (toll > 0) {
+            stablecoin.mint(address(burnToll), toll);
+            burnToll.handleMintToll(address(stablecoin), toll);
         }
 
         // Record daily spend for compliance
@@ -105,9 +115,17 @@ contract Minter is Ownable {
         compliance.checkCompliance(msg.sender, amount);
 
         uint256 fee = (amount * redeemFeeBps) / 10000;
+        uint256 toll = _previewRedeemToll(amount);
+        if (fee + toll > amount) revert AmountTooSmallForFeesAndToll();
+        uint256 burnAmount = amount - toll;
+        uint256 redeemAmount = amount - fee - toll;
 
-        // Burn tokens
-        stablecoin.burnFrom(msg.sender, amount);
+        // Burn tokens and route toll revenue
+        if (toll > 0) {
+            stablecoin.transferFrom(msg.sender, address(burnToll), toll);
+            burnToll.handleRedeemToll(address(stablecoin), toll);
+        }
+        stablecoin.burnFrom(msg.sender, burnAmount);
 
         // Update tracked supply
         reserveManager.updateTrackedSupply(stablecoin.totalSupply());
@@ -115,13 +133,13 @@ contract Minter is Ownable {
         // Queue redemption for settlement
         redemptions.push(Redemption({
             redeemer: msg.sender,
-            amount: amount - fee,
+            amount: redeemAmount,
             fee: fee,
             timestamp: block.timestamp,
             settled: false
         }));
 
-        emit RedemptionQueued(redemptions.length - 1, msg.sender, amount - fee);
+        emit RedemptionQueued(redemptions.length - 1, msg.sender, redeemAmount);
     }
 
     function settleRedemption(uint256 id) external onlyOwner {
@@ -139,7 +157,26 @@ contract Minter is Ownable {
         feeCollector = _feeCollector;
     }
 
+    /**
+     * @notice Sets or disables the optional burn-toll extension.
+     * @param _burnToll BurnToll contract address, or zero address to disable toll collection.
+     */
+    function setBurnToll(address _burnToll) external onlyOwner {
+        burnToll = BurnToll(_burnToll);
+        emit BurnTollSet(_burnToll);
+    }
+
     function getRedemptionCount() external view returns (uint256) {
         return redemptions.length;
+    }
+
+    function _previewMintToll(uint256 amount) internal view returns (uint256) {
+        if (address(burnToll) == address(0)) return 0;
+        return burnToll.previewMintToll(address(stablecoin), amount);
+    }
+
+    function _previewRedeemToll(uint256 amount) internal view returns (uint256) {
+        if (address(burnToll) == address(0)) return 0;
+        return burnToll.previewRedeemToll(address(stablecoin), amount);
     }
 }
