@@ -1,0 +1,34 @@
+{
+  "geography": "SG",
+  "name": "Singapore",
+  "stablecoin": {
+    "name": "Singapore Dollar Stablecoin",
+    "symbol": "SGDR",
+    "decimals": 6
+  },
+  "compliance": {
+    "kyc_required": true,
+    "max_transaction_amount": 25000000000,
+    "daily_limit": 100000000000,
+    "notes": "MAS Payment Services Act deployment profile. Amounts are in 6-decimal units.",
+    "regulatory": {
+      "major_payment_institution_license": true,
+      "travel_rule_controls": true
+    }
+  },
+  "reserves": {
+    "minimum_ratio_bps": 10000,
+    "accepted_assets": [
+      "SGD bank deposits",
+      "Singapore Government Securities",
+      "MAS bills"
+    ],
+    "bootstrap_asset_id": "SG_RESERVE",
+    "bootstrap_asset_name": "Singapore fiat reserve",
+    "bootstrap_amount": "0"
+  },
+  "fees": {
+    "mint_bps": 12,
+    "redeem_bps": 12
+  }
+}
