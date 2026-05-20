@@ -5,6 +5,13 @@ import "forge-std/Test.sol";
 import "../contracts/Stablecoin.sol";
 
 contract StablecoinTest is Test {
+    bytes32 private constant PERMIT_TYPEHASH = keccak256(
+        "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
+    );
+    bytes32 private constant EIP712_DOMAIN_TYPEHASH = keccak256(
+        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+    );
+
     Stablecoin public coin;
     address public admin = address(1);
     address public user1 = address(2);
@@ -146,6 +153,115 @@ contract StablecoinTest is Test {
         assertEq(coin.balanceOf(user2), 500_000);
     }
 
+    // ==================== Permit ====================
+
+    function testFuzz_permitSetsAllowanceAndIncrementsNonce(
+        uint256 ownerKey,
+        address spender,
+        uint256 value,
+        uint256 deadline
+    ) public {
+        ownerKey = bound(ownerKey, 1, type(uint128).max);
+        value = bound(value, 0, type(uint128).max);
+        deadline = bound(deadline, block.timestamp, type(uint64).max);
+        address owner = vm.addr(ownerKey);
+
+        (uint8 v, bytes32 r, bytes32 s) = _signPermit(
+            ownerKey, owner, spender, value, coin.nonces(owner), deadline, coin.DOMAIN_SEPARATOR()
+        );
+
+        coin.permit(owner, spender, value, deadline, v, r, s);
+
+        assertEq(coin.allowance(owner, spender), value);
+        assertEq(coin.nonces(owner), 1);
+    }
+
+    function testFuzz_expiredPermitReverts(uint256 ownerKey, address spender, uint256 value)
+        public
+    {
+        ownerKey = bound(ownerKey, 1, type(uint128).max);
+        value = bound(value, 0, type(uint128).max);
+        vm.warp(10);
+        uint256 expiredDeadline = block.timestamp - 1;
+        address owner = vm.addr(ownerKey);
+
+        (uint8 v, bytes32 r, bytes32 s) = _signPermit(
+            ownerKey,
+            owner,
+            spender,
+            value,
+            coin.nonces(owner),
+            expiredDeadline,
+            coin.DOMAIN_SEPARATOR()
+        );
+
+        vm.expectRevert();
+        coin.permit(owner, spender, value, expiredDeadline, v, r, s);
+    }
+
+    function testFuzz_wrongChainPermitReverts(
+        uint256 ownerKey,
+        address spender,
+        uint256 value,
+        uint256 deadline
+    ) public {
+        ownerKey = bound(ownerKey, 1, type(uint128).max);
+        value = bound(value, 0, type(uint128).max);
+        deadline = bound(deadline, block.timestamp, type(uint64).max);
+        address owner = vm.addr(ownerKey);
+        bytes32 wrongChainDomain = _domainSeparator(block.chainid + 1, address(coin));
+
+        (uint8 v, bytes32 r, bytes32 s) = _signPermit(
+            ownerKey, owner, spender, value, coin.nonces(owner), deadline, wrongChainDomain
+        );
+
+        vm.expectRevert();
+        coin.permit(owner, spender, value, deadline, v, r, s);
+    }
+
+    function testFuzz_wrongVerifyingContractPermitReverts(
+        uint256 ownerKey,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        address wrongContract
+    ) public {
+        ownerKey = bound(ownerKey, 1, type(uint128).max);
+        value = bound(value, 0, type(uint128).max);
+        deadline = bound(deadline, block.timestamp, type(uint64).max);
+        vm.assume(wrongContract != address(coin));
+        address owner = vm.addr(ownerKey);
+        bytes32 wrongContractDomain = _domainSeparator(block.chainid, wrongContract);
+
+        (uint8 v, bytes32 r, bytes32 s) = _signPermit(
+            ownerKey, owner, spender, value, coin.nonces(owner), deadline, wrongContractDomain
+        );
+
+        vm.expectRevert();
+        coin.permit(owner, spender, value, deadline, v, r, s);
+    }
+
+    function testFuzz_permitReplayReverts(
+        uint256 ownerKey,
+        address spender,
+        uint256 value,
+        uint256 deadline
+    ) public {
+        ownerKey = bound(ownerKey, 1, type(uint128).max);
+        value = bound(value, 0, type(uint128).max);
+        deadline = bound(deadline, block.timestamp, type(uint64).max);
+        address owner = vm.addr(ownerKey);
+
+        (uint8 v, bytes32 r, bytes32 s) = _signPermit(
+            ownerKey, owner, spender, value, coin.nonces(owner), deadline, coin.DOMAIN_SEPARATOR()
+        );
+
+        coin.permit(owner, spender, value, deadline, v, r, s);
+
+        vm.expectRevert();
+        coin.permit(owner, spender, value, deadline, v, r, s);
+    }
+
     // ==================== Fuzz Tests ====================
 
     function testFuzz_mintAnyAmount(uint256 amount) public {
@@ -195,5 +311,37 @@ contract StablecoinTest is Test {
 
         assertEq(coin.totalSupply(), supplyBefore);
         assertEq(coin.balanceOf(user1) + coin.balanceOf(user2), amount);
+    }
+
+    function _signPermit(
+        uint256 ownerKey,
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 nonce,
+        uint256 deadline,
+        bytes32 domainSeparator
+    ) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
+        bytes32 structHash = keccak256(
+            abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonce, deadline)
+        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        return vm.sign(ownerKey, digest);
+    }
+
+    function _domainSeparator(uint256 chainId, address verifyingContract)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(
+            abi.encode(
+                EIP712_DOMAIN_TYPEHASH,
+                keccak256(bytes("Test Stablecoin")),
+                keccak256(bytes("1")),
+                chainId,
+                verifyingContract
+            )
+        );
     }
 }
