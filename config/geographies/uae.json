@@ -1,0 +1,36 @@
+{
+  "geography": "AE",
+  "aliases": ["UAE"],
+  "name": "United Arab Emirates",
+  "stablecoin": {
+    "name": "UAE Dirham Stablecoin",
+    "symbol": "AEDR",
+    "decimals": 6
+  },
+  "compliance": {
+    "kyc_required": true,
+    "max_transaction_amount": 50000000000,
+    "daily_limit": 200000000000,
+    "notes": "UAE deployment profile using ISO alpha-2 AE for on-chain bytes2 geography checks. Amounts are in 6-decimal units.",
+    "regulatory": {
+      "vara_alignment": true,
+      "aml_cft_controls": true,
+      "travel_rule_controls": true
+    }
+  },
+  "reserves": {
+    "minimum_ratio_bps": 10000,
+    "accepted_assets": [
+      "AED bank deposits",
+      "UAE government securities",
+      "USD short-term treasury bills"
+    ],
+    "bootstrap_asset_id": "AE_RESERVE",
+    "bootstrap_asset_name": "UAE fiat reserve",
+    "bootstrap_amount": "0"
+  },
+  "fees": {
+    "mint_bps": 15,
+    "redeem_bps": 15
+  }
+}

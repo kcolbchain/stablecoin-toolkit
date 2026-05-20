@@ -34,6 +34,7 @@ Built on learnings from real stablecoin deployments. Production-grade Solidity c
 - **Minting gateway** — compliance-checked minting, redemption queue, fee management
 - **Depeg defence** — `DepegGuard` state machine monitors the collateral price feed and pauses mints / stablecoin on threshold breaches; see [`docs/depeg-guard.md`](docs/depeg-guard.md)
 - **Multi-geography** — configurable per jurisdiction (see `config/geographies/`)
+- **Deployment scripts** — India, Singapore, and UAE deployment plans with jurisdiction-specific compliance limits; see [`docs/multi-geography-deployments.md`](docs/multi-geography-deployments.md)
 - **Role-based access** — MINTER, PAUSER, BLACKLISTER roles via OpenZeppelin AccessControl
 
 ## Getting Started
