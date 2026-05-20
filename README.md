@@ -32,6 +32,7 @@ Built on learnings from real stablecoin deployments. Production-grade Solidity c
 - **Reserve manager** — multi-asset reserve tracking, on-chain proof of reserves, ratio enforcement
 - **Compliance module** — KYC status per address, geography-based transfer restrictions, transaction limits
 - **Minting gateway** — compliance-checked minting, redemption queue, fee management
+- **Lucidly reserve adapter** — parks excess liquid reserve into a syUSD-style vault with liquid-buffer rebalancing
 - **Depeg defence** — `DepegGuard` state machine monitors the collateral price feed and pauses mints / stablecoin on threshold breaches; see [`docs/depeg-guard.md`](docs/depeg-guard.md)
 - **Multi-geography** — configurable per jurisdiction (see `config/geographies/`)
 - **Role-based access** — MINTER, PAUSER, BLACKLISTER roles via OpenZeppelin AccessControl
@@ -72,8 +73,13 @@ config/geographies/
 | `ReserveManager.sol` | Multi-asset reserve tracking and proof of reserves |
 | `ComplianceModule.sol` | KYC, geography restrictions, transaction limits |
 | `Minter.sol` | Gateway — compliance + reserve checks before mint/redeem |
+| `extensions/LucidlyAdapter.sol` | Lucidly syUSD-style reserve parking adapter with configurable liquid buffer |
 | `DepegGuard.sol` | Depeg-defence watchdog — Normal/Caution/Hard state machine, pauses mints + stablecoin on threshold breaches. Spec: [`docs/depeg-guard.md`](docs/depeg-guard.md) |
 | `ChainlinkPoRAdapter.sol` | Adapter for Chainlink Proof of Reserves feeds |
+
+## Lucidly Reserve Parking
+
+`LucidlyAdapter` keeps a configurable reserve buffer liquid while parking excess USDC-style reserve assets into a Lucidly syUSD-style vault. Operators call `rebalance()` to park excess reserve, `unpark(amount)` before redemptions that exceed the liquid buffer, and `harvestYield()` on an epoch cadence to report accrued yield. Tests use `MockLucidlyVault`; production deployments should wire the final Lucidly interface for the target chain.
 
 ## Contributing
 
