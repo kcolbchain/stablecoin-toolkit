@@ -1,7 +1,9 @@
 [profile.default]
 src = "contracts"
+test = "forge-test"
 out = "forge-out"
 libs = ["node_modules"]
+remappings = ["forge-std/=forge-std/"]
 solc = "0.8.24"
 optimizer = true
 optimizer-runs = 200
