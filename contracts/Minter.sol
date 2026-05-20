@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Stablecoin.sol";
 import "./ReserveManager.sol";
 import "./ComplianceModule.sol";
+import "./extensions/BurnToll.sol";
 
 /**
  * @title Minter
@@ -15,6 +16,7 @@ contract Minter is Ownable {
     Stablecoin public stablecoin;
     ReserveManager public reserveManager;
     ComplianceModule public compliance;
+    BurnToll public burnToll;
 
     uint256 public mintFeeBps;    // e.g. 10 = 0.1%
     uint256 public redeemFeeBps;
@@ -37,6 +39,8 @@ contract Minter is Ownable {
     event RedemptionSettled(uint256 indexed id);
     event MinterAuthorized(address indexed minter);
     event MinterRevoked(address indexed minter);
+    event BurnTollSet(address indexed burnToll);
+    event BurnTollApplied(bool indexed mintToll, uint256 amount);
 
     error NotAuthorizedMinter();
     error ReserveCheckFailed();
@@ -75,6 +79,15 @@ contract Minter is Ownable {
         emit MinterRevoked(minter);
     }
 
+    /**
+     * @notice Sets the optional burn-toll module used by mint and redeem.
+     * @param _burnToll BurnToll module address, or zero address to disable it.
+     */
+    function setBurnToll(address _burnToll) external onlyOwner {
+        burnToll = BurnToll(_burnToll);
+        emit BurnTollSet(_burnToll);
+    }
+
     function mint(address to, uint256 amount) external onlyAuthorizedMinter {
         // Check compliance
         compliance.checkCompliance(to, amount);
@@ -86,12 +99,18 @@ contract Minter is Ownable {
 
         // Calculate fee
         uint256 fee = (amount * mintFeeBps) / 10000;
-        uint256 netAmount = amount - fee;
+        uint256 toll = _previewMintToll(amount);
+        uint256 netAmount = amount - fee - toll;
 
         // Mint
         stablecoin.mint(to, netAmount);
         if (fee > 0) {
             stablecoin.mint(feeCollector, fee);
+        }
+        if (toll > 0) {
+            stablecoin.mint(address(burnToll), toll);
+            burnToll.routeMintToll(toll);
+            emit BurnTollApplied(true, toll);
         }
 
         // Record daily spend for compliance
@@ -105,9 +124,16 @@ contract Minter is Ownable {
         compliance.checkCompliance(msg.sender, amount);
 
         uint256 fee = (amount * redeemFeeBps) / 10000;
+        uint256 toll = _previewRedeemToll(amount);
+        uint256 netRedemption = amount - fee - toll;
 
         // Burn tokens
         stablecoin.burnFrom(msg.sender, amount);
+        if (toll > 0) {
+            stablecoin.mint(address(burnToll), toll);
+            burnToll.routeRedeemToll(toll);
+            emit BurnTollApplied(false, toll);
+        }
 
         // Update tracked supply
         reserveManager.updateTrackedSupply(stablecoin.totalSupply());
@@ -115,13 +141,13 @@ contract Minter is Ownable {
         // Queue redemption for settlement
         redemptions.push(Redemption({
             redeemer: msg.sender,
-            amount: amount - fee,
+            amount: netRedemption,
             fee: fee,
             timestamp: block.timestamp,
             settled: false
         }));
 
-        emit RedemptionQueued(redemptions.length - 1, msg.sender, amount - fee);
+        emit RedemptionQueued(redemptions.length - 1, msg.sender, netRedemption);
     }
 
     function settleRedemption(uint256 id) external onlyOwner {
@@ -141,5 +167,17 @@ contract Minter is Ownable {
 
     function getRedemptionCount() external view returns (uint256) {
         return redemptions.length;
+    }
+
+    function _previewMintToll(uint256 amount) internal view returns (uint256) {
+        if (address(burnToll) == address(0)) return 0;
+        (uint256 tollAmount, , ) = burnToll.previewMintToll(amount);
+        return tollAmount;
+    }
+
+    function _previewRedeemToll(uint256 amount) internal view returns (uint256) {
+        if (address(burnToll) == address(0)) return 0;
+        (uint256 tollAmount, , ) = burnToll.previewRedeemToll(amount);
+        return tollAmount;
     }
 }

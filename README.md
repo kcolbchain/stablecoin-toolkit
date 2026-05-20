@@ -32,6 +32,7 @@ Built on learnings from real stablecoin deployments. Production-grade Solidity c
 - **Reserve manager** — multi-asset reserve tracking, on-chain proof of reserves, ratio enforcement
 - **Compliance module** — KYC status per address, geography-based transfer restrictions, transaction limits
 - **Minting gateway** — compliance-checked minting, redemption queue, fee management
+- **Burn-toll extension** — optional 0.5% mint/redeem toll routed through a floor pool to buy + burn a paired governance token
 - **Depeg defence** — `DepegGuard` state machine monitors the collateral price feed and pauses mints / stablecoin on threshold breaches; see [`docs/depeg-guard.md`](docs/depeg-guard.md)
 - **Multi-geography** — configurable per jurisdiction (see `config/geographies/`)
 - **Role-based access** — MINTER, PAUSER, BLACKLISTER roles via OpenZeppelin AccessControl
@@ -72,6 +73,7 @@ config/geographies/
 | `ReserveManager.sol` | Multi-asset reserve tracking and proof of reserves |
 | `ComplianceModule.sol` | KYC, geography restrictions, transaction limits |
 | `Minter.sol` | Gateway — compliance + reserve checks before mint/redeem |
+| `extensions/BurnToll.sol` | Optional mint/redeem toll module with low-liquidity skip checks. Wiring guide: [`docs/burn-toll.md`](docs/burn-toll.md) |
 | `DepegGuard.sol` | Depeg-defence watchdog — Normal/Caution/Hard state machine, pauses mints + stablecoin on threshold breaches. Spec: [`docs/depeg-guard.md`](docs/depeg-guard.md) |
 | `ChainlinkPoRAdapter.sol` | Adapter for Chainlink Proof of Reserves feeds |
 
