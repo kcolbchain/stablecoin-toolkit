@@ -1,4 +1,5 @@
 # stablecoin-toolkit
+[![repo](https://img.shields.io/badge/repo-stablecoin-toolkit-blue)](https://github.com/kcolbchain/stablecoin-toolkit)
 
 Open-source stablecoin infrastructure — issuance, reserve management, compliance, multi-geography support. By [kcolbchain](https://kcolbchain.com) (est. 2015).
 
