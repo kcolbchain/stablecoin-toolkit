@@ -1,27 +1,26 @@
 {
-  "geography": "IN",
   "name": "India",
-  "stablecoin": {
-    "name": "INDR Stablecoin",
-    "symbol": "INDR",
-    "decimals": 6
-  },
+  "code": "IN",
+  "currency": "INR",
   "compliance": {
-    "kyc_required": true,
-    "max_transaction_amount": 10000000000,
-    "daily_limit": 50000000000,
-    "notes": "Amounts in 6-decimal units. 10B = 10,000 INDR per tx, 50B = 50,000 INDR per day"
+    "kypRequired": true,
+    "travelRuleCompliant": true,
+    "fatfCompliant": true
   },
-  "reserves": {
-    "minimum_ratio_bps": 10500,
-    "accepted_assets": [
-      "INR bank deposits",
-      "Indian government securities",
-      "RBI-approved instruments"
-    ]
+  "transferRestrictions": {
+    "maxTxAmount": 1000000000000,
+    "dailyLimit": 5000000000000,
+    "allowInternationalTransfers": false,
+    "allowedJurisdictions": ["SG", "AE"]
   },
-  "fees": {
-    "mint_bps": 10,
-    "redeem_bps": 10
+  "feeStructure": {
+    "mintFeeBps": 10,
+    "redeemFeeBps": 10,
+    "feeCollector": "0x0000000000000000000000000000000000000001"
+  },
+  "metadata": {
+    "issuerName": "kcolbchain India Operations",
+    "regulatoryBody": "Reserve Bank of India",
+    "licenseType": "payment-system-operator"
   }
 }

@@ -1,0 +1,26 @@
+{
+  "name": "UAE",
+  "code": "AE",
+  "currency": "AED",
+  "compliance": {
+    "kypRequired": true,
+    "travelRuleCompliant": true,
+    "fatfCompliant": true
+  },
+  "transferRestrictions": {
+    "maxTxAmount": 1000000000000,
+    "dailyLimit": 5000000000000,
+    "allowInternationalTransfers": true,
+    "allowedJurisdictions": ["IN", "SG", "EU", "UK"]
+  },
+  "feeStructure": {
+    "mintFeeBps": 8,
+    "redeemFeeBps": 8,
+    "feeCollector": "0x0000000000000000000000000000000000000003"
+  },
+  "metadata": {
+    "issuerName": "kcolbchain UAE FZE",
+    "regulatoryBody": "Dubai Financial Services Authority",
+    "licenseType": "digital-asset-issuer"
+  }
+}
