@@ -1,0 +1,26 @@
+{
+  "name": "Singapore",
+  "code": "SG",
+  "currency": "SGD",
+  "compliance": {
+    "kypRequired": true,
+    "travelRuleCompliant": true,
+    "fatfCompliant": true
+  },
+  "transferRestrictions": {
+    "maxTxAmount": 500000000000,
+    "dailyLimit": 2000000000000,
+    "allowInternationalTransfers": true,
+    "allowedJurisdictions": ["IN", "AE", "US", "EU", "UK"]
+  },
+  "feeStructure": {
+    "mintFeeBps": 5,
+    "redeemFeeBps": 5,
+    "feeCollector": "0x0000000000000000000000000000000000000002"
+  },
+  "metadata": {
+    "issuerName": "kcolbchain Singapore Pte Ltd",
+    "regulatoryBody": "Monetary Authority of Singapore",
+    "licenseType": "major-payment-institution"
+  }
+}
