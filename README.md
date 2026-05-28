@@ -117,6 +117,10 @@ npx hardhat compile
 # Run tests
 npx hardhat test
 
+# Run Foundry tests
+forge test
+# or: npm run test:forge
+
 # Deploy locally
 npx hardhat node &
 npx hardhat run scripts/deploy.js --network localhost
@@ -142,6 +146,12 @@ config/geographies/
 | `Minter.sol` | Gateway — compliance + reserve checks before mint/redeem |
 | `DepegGuard.sol` | Depeg-defence watchdog — Normal/Caution/Hard state machine, pauses mints + stablecoin on threshold breaches. Spec: [`docs/depeg-guard.md`](docs/depeg-guard.md) |
 | `ChainlinkPoRAdapter.sol` | Adapter for Chainlink Proof of Reserves feeds |
+
+## Foundry notes
+
+- Forge tests live under `forge-test/` and are wired through `foundry.toml`, so plain `forge test` works after `npm install`.
+- `lib/forge-std` is already vendored for the test harness; no extra `forge install` step is needed for a normal local checkout.
+- If `forge` is installed outside your shell `PATH`, invoke it with your local Foundry bin path or add that directory to `PATH` first.
 
 ## Contributing
 
