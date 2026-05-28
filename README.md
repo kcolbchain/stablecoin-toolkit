@@ -30,7 +30,7 @@ Built on learnings from real stablecoin deployments. Production-grade Solidity c
 
 - **ERC-20 stablecoin** with mint/burn, pausable, blacklistable, EIP-2612 permit
 - **Reserve manager** — multi-asset reserve tracking, on-chain proof of reserves, ratio enforcement
-- **Compliance module** — KYC status per address, geography-based transfer restrictions, transaction limits
+- **Compliance module** — KYC status per address, geography-based transfer restrictions, transaction limits; flow diagrams in [`docs/compliance-module.md`](docs/compliance-module.md)
 - **Minting gateway** — compliance-checked minting, redemption queue, fee management
 - **Depeg defence** — `DepegGuard` state machine monitors the collateral price feed and pauses mints / stablecoin on threshold breaches; see [`docs/depeg-guard.md`](docs/depeg-guard.md)
 - **Multi-geography** — configurable per jurisdiction (see `config/geographies/`)
