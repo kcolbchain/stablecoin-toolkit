@@ -3,7 +3,7 @@ src = "contracts"
 test = "forge-test"
 out = "forge-out"
 libs = ["node_modules", "lib"]
-remappings = ["forge-std/=forge-std/"]
+remappings = ["forge-std/=lib/forge-std/src/"]
 solc = "0.8.24"
 optimizer = true
 optimizer-runs = 200
